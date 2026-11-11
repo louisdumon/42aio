@@ -1,0 +1,284 @@
+{
+	"name": "42-aio",
+	"displayName": "42 All In One",
+	"description": "Extension tout-en-un pour faciliter la structuration de vos projets 42: header automatique, norminette intégrée, correction automatique de la norme et formatage en C et Python.",
+	"version": "0.1.0",
+	"publisher": "local",
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.85.0"
+	},
+	"categories": [
+		"Linters",
+		"Formatters"
+	],
+	"keywords": [
+		"42",
+		"norminette",
+		"norm",
+		"c",
+		"python",
+		"black",
+		"flake8"
+	],
+	"icon": "assets/icon.png",
+	"activationEvents": [
+		"onLanguage:c",
+		"onLanguage:cpp",
+		"onLanguage:python"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"configuration": [
+			{
+				"title": "42 All In One",
+				"properties": {
+					"42AIO.showTypeCheckingErrors": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Show type checking errors : afficher les erreurs de vérification (norminette en C, flake8 en Python). Décoche pour tout masquer d'un coup."
+					}
+				}
+			},
+			{
+				"title": "42 All In One — C",
+				"properties": {
+					"42AIO.c.command": {
+						"scope": "machine-overridable",
+						"type": "string",
+						"default": "norminette",
+						"description": "Commande ou chemin de la norminette. Peut contenir des arguments (ex. `python3 -m norminette`)."
+					},
+					"42AIO.c.inlineErrors": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Afficher le message d'erreur à droite de la ligne concernée (désactivé automatiquement si l'extension Error Lens est installée, pour éviter les doublons)."
+					},
+					"42AIO.c.ignoredRules": {
+						"scope": "resource",
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"description": "Noms d'erreurs à masquer (ex. `INVALID_HEADER`, `TOO_MANY_LINES`)."
+					},
+					"42AIO.c.autoFix": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Correction automatique de la norme (c_formatter_42) à chaque sauvegarde manuelle. Décoche pour la désactiver."
+					},
+					"42AIO.c.smartWrap": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Lignes trop longues : couper avant les opérateurs logiques (||, &&), comparaisons et arithmétique plutôt qu'à un endroit arbitraire. Annulé automatiquement si cela ajoute des erreurs de norme."
+					},
+					"42AIO.c.header.username": {
+						"scope": "resource",
+						"type": "string",
+						"default": "",
+						"description": "Login 42 utilisé dans le header. Vide = nom d'utilisateur du système."
+					},
+					"42AIO.c.header.email": {
+						"scope": "resource",
+						"type": "string",
+						"default": "",
+						"description": "Email utilisé dans le header. Vide = <login>@student.42.fr."
+					},
+					"42AIO.c.header.autoInsert": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Insérer automatiquement le header 42 dans les fichiers .c/.h qui n'en ont pas (nouveau fichier vide, ou à la sauvegarde)."
+					},
+					"42AIO.c.header.autoUpdate": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Mettre à jour la ligne « Updated » (et le nom de fichier) du header à chaque sauvegarde."
+					},
+					"42AIO.c.formatter.command": {
+						"scope": "machine-overridable",
+						"type": "string",
+						"default": "c_formatter_42",
+						"description": "Commande ou chemin de c_formatter_42 (lit le code sur stdin, écrit sur stdout)."
+					},
+					"42AIO.c.useGitignore": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Pour « Vérifier le workspace » : ignorer les fichiers couverts par .gitignore."
+					}
+				}
+			},
+			{
+				"title": "42 All In One — Python",
+				"properties": {
+					"42AIO.python.formatOnSave": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Formater automatiquement avec Black à chaque sauvegarde manuelle. Décoche pour désactiver."
+					},
+					"42AIO.python.black.command": {
+						"scope": "machine-overridable",
+						"type": "string",
+						"default": "black",
+						"description": "Commande ou chemin de Black (ex. `python3 -m black`)."
+					},
+					"42AIO.python.black.args": {
+						"scope": "resource",
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [
+							"--line-length",
+							"79"
+						],
+						"description": "Arguments pour Black (par défaut 79 colonnes, comme flake8). Pour suivre le `pyproject.toml` du projet, vide la liste."
+					},
+					"42AIO.python.flake8.enabled": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Afficher les erreurs de style flake8 (norme Python) à l'ouverture et à la sauvegarde."
+					},
+					"42AIO.python.flake8.command": {
+						"scope": "machine-overridable",
+						"type": "string",
+						"default": "flake8",
+						"description": "Commande ou chemin de flake8 (ex. `python3 -m flake8`)."
+					},
+					"42AIO.python.flake8.args": {
+						"scope": "resource",
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"description": "Arguments supplémentaires pour flake8 (ex. `[\"--max-line-length\", \"100\"]`). setup.cfg, tox.ini et .flake8 du projet sont lus automatiquement."
+					},
+					"42AIO.python.inlineErrors": {
+						"scope": "resource",
+						"type": "boolean",
+						"default": true,
+						"description": "Afficher le message d'erreur flake8 à droite de la ligne concernée (désactivé automatiquement si l'extension Error Lens est installée, pour éviter les doublons)."
+					}
+				}
+			}
+		],
+		"commands": [
+			{
+				"command": "42AIO.c.insertHeader",
+				"title": "Insérer / mettre à jour le header 42",
+				"category": "42 All In One (C)",
+				"icon": "$(file-code)"
+			},
+			{
+				"command": "42AIO.c.checkFile",
+				"title": "Vérifier le fichier",
+				"category": "42 All In One (C)",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "42AIO.c.fix",
+				"title": "Corriger la norme du fichier",
+				"category": "42 All In One (C)",
+				"icon": "$(wand)"
+			},
+			{
+				"command": "42AIO.c.checkWorkspace",
+				"title": "Vérifier le workspace",
+				"category": "42 All In One (C)",
+				"icon": "$(run-all)"
+			},
+			{
+				"command": "42AIO.c.clear",
+				"title": "Effacer les erreurs",
+				"category": "42 All In One (C)",
+				"icon": "$(clear-all)"
+			},
+			{
+				"command": "42AIO.python.format",
+				"title": "Formater avec Black",
+				"category": "42 All In One (Python)",
+				"icon": "$(wand)"
+			},
+			{
+				"command": "42AIO.python.check",
+				"title": "Vérifier le fichier avec flake8",
+				"category": "42 All In One (Python)",
+				"icon": "$(refresh)"
+			}
+		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "norminette",
+					"title": "42 All In One",
+					"icon": "assets/icon.svg"
+				}
+			]
+		},
+		"views": {
+			"norminette": [
+				{
+					"id": "42AIO.c.errors",
+					"name": "Erreurs de norme (C)"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "42AIO.c.errors",
+				"contents": "Aucune erreur de norme. 🎉\n[Vérifier le workspace](command:42AIO.c.checkWorkspace)"
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "42AIO.c.checkWorkspace",
+					"when": "view == 42AIO.c.errors",
+					"group": "navigation@1"
+				},
+				{
+					"command": "42AIO.c.clear",
+					"when": "view == 42AIO.c.errors",
+					"group": "navigation@2"
+				}
+			],
+			"editor/title": [
+				{
+					"command": "42AIO.c.fix",
+					"when": "resourceExtname == .c || resourceExtname == .h",
+					"group": "navigation@1"
+				},
+				{
+					"command": "42AIO.c.checkFile",
+					"when": "resourceExtname == .c || resourceExtname == .h",
+					"group": "navigation@2"
+				},
+				{
+					"command": "42AIO.python.format",
+					"when": "resourceExtname == .py",
+					"group": "navigation@1"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "42AIO.c.insertHeader",
+				"key": "ctrl+alt+h",
+				"when": "editorTextFocus && (resourceExtname == .c || resourceExtname == .h)"
+			}
+		]
+	},
+	"scripts": {
+		"package": "npx --yes @vscode/vsce package"
+	}
+}
