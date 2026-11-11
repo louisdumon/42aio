@@ -3,7 +3,7 @@ const cp = require('child_process');
 const path = require('path');
 const { hasHeader, updateHeader, insertHeader } = require('./header');
 const { reflow } = require('./reflow');
-const { minimalEdits, errorLensInstalled, showTypeCheckingErrors } = require('../shared');
+const { minimalEdits, showTypeCheckingErrors } = require('../shared');
 
 const SECTION = '42AIO.c';
 const TAB_WIDTH = 4;
@@ -195,6 +195,15 @@ async function lintDocument(doc) {
 	}
 }
 
+/** True when `dir` is inside a Git work tree (norminette's --use-gitignore fails anywhere else). */
+function isGitRepo(dir) {
+	return new Promise((resolve) => {
+		cp.execFile('git', ['-C', dir, 'rev-parse', '--is-inside-work-tree'], { timeout: 5000 }, (err, stdout) =>
+			resolve(!err && stdout.trim() === 'true')
+		);
+	});
+}
+
 async function checkWorkspace() {
 	const folders = vscode.workspace.workspaceFolders;
 	if (!folders || !folders.length) {
@@ -207,7 +216,8 @@ async function checkWorkspace() {
 			const found = new Map(); // fsPath -> report
 			for (const folder of folders) {
 				const cfg = config(folder.uri);
-				const args = cfg.get('useGitignore') ? ['--use-gitignore', folder.uri.fsPath] : [folder.uri.fsPath];
+				const useGitignore = cfg.get('useGitignore') && (await isGitRepo(folder.uri.fsPath));
+				const args = useGitignore ? ['--use-gitignore', folder.uri.fsPath] : [folder.uri.fsPath];
 				try {
 					const report = await runNorminette(commandParts(folder.uri), args, folder.uri.fsPath);
 					for (const f of report.files || []) found.set(f.path, f);
@@ -391,12 +401,12 @@ async function beforeSaveEdits(doc, reason) {
 	return minimalEdits(doc, text);
 }
 
-/* ---------- inline messages (à la ErrorLens) ---------- */
+/* ---------- inline messages ---------- */
 
 function updateInline(editor) {
 	if (!editor) return;
 	const doc = editor.document;
-	if (!isNormFile(doc) || !config(doc.uri).get('inlineErrors') || errorLensInstalled()) {
+	if (!isNormFile(doc) || !config(doc.uri).get('inlineErrors')) {
 		editor.setDecorations(inlineDecoration, []);
 		return;
 	}
@@ -430,7 +440,7 @@ function updateStatusBar() {
 	if (list.length) {
 		statusBar.text = `$(error) Norm : ${list.length}`;
 		statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-		statusBar.tooltip = 'Erreurs de norme dans ce fichier — cliquer pour ouvrir le panneau';
+		statusBar.tooltip = 'Erreurs de norme dans ce fichier, cliquer pour ouvrir le panneau';
 	} else {
 		statusBar.text = '$(check) Norm OK';
 		statusBar.backgroundColor = undefined;
@@ -528,7 +538,6 @@ function activate(context) {
 		}),
 		vscode.commands.registerCommand('42AIO.c.insertHeader', headerCommand),
 		vscode.commands.registerCommand('42AIO.c.checkWorkspace', checkWorkspace),
-		vscode.commands.registerCommand('42AIO.c.clear', () => diagnostics.clear()),
 
 		vscode.workspace.onDidOpenTextDocument(onOpen),
 		// norminette runs on open and on save

@@ -16,14 +16,9 @@ function minimalEdits(doc, newText) {
 	return [vscode.TextEdit.replace(new vscode.Range(doc.positionAt(start), doc.positionAt(endOld)), newText.slice(start, endNew))];
 }
 
-/** Error Lens already renders every diagnostic inline; drawing our own would show each message twice. */
-function errorLensInstalled() {
-	return !!vscode.extensions.getExtension('usernamehw.errorlens');
-}
-
 /** Global "Show type checking errors" toggle (norminette and flake8). */
 function showTypeCheckingErrors(resource) {
 	return vscode.workspace.getConfiguration('42AIO', resource).get('showTypeCheckingErrors', true);
 }
 
-module.exports = { minimalEdits, errorLensInstalled, showTypeCheckingErrors };
+module.exports = { minimalEdits, showTypeCheckingErrors };

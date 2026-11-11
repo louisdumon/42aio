@@ -3,7 +3,7 @@
 	"displayName": "42 All In One",
 	"description": "Extension tout-en-un pour faciliter la structuration de vos projets 42: header automatique, norminette intégrée, correction automatique de la norme et formatage en C et Python.",
 	"version": "0.1.0",
-	"publisher": "local",
+	"publisher": "louisdumon",
 	"license": "MIT",
 	"engines": {
 		"vscode": "^1.85.0"
@@ -54,7 +54,7 @@
 						"scope": "resource",
 						"type": "boolean",
 						"default": true,
-						"description": "Afficher le message d'erreur à droite de la ligne concernée (désactivé automatiquement si l'extension Error Lens est installée, pour éviter les doublons)."
+						"description": "Afficher le message d'erreur à droite de la ligne concernée."
 					},
 					"42AIO.c.ignoredRules": {
 						"scope": "resource",
@@ -167,7 +167,7 @@
 						"scope": "resource",
 						"type": "boolean",
 						"default": true,
-						"description": "Afficher le message d'erreur flake8 à droite de la ligne concernée (désactivé automatiquement si l'extension Error Lens est installée, pour éviter les doublons)."
+						"description": "Afficher le message d'erreur flake8 à droite de la ligne concernée."
 					}
 				}
 			}
@@ -198,12 +198,6 @@
 				"icon": "$(run-all)"
 			},
 			{
-				"command": "42AIO.c.clear",
-				"title": "Effacer les erreurs",
-				"category": "42 All In One (C)",
-				"icon": "$(clear-all)"
-			},
-			{
 				"command": "42AIO.python.format",
 				"title": "Formater avec Black",
 				"category": "42 All In One (Python)",
@@ -228,6 +222,10 @@
 		"views": {
 			"norminette": [
 				{
+					"id": "42AIO.settings",
+					"name": "Réglages"
+				},
+				{
 					"id": "42AIO.c.errors",
 					"name": "Erreurs de norme (C)"
 				}
@@ -236,7 +234,7 @@
 		"viewsWelcome": [
 			{
 				"view": "42AIO.c.errors",
-				"contents": "Aucune erreur de norme. 🎉\n[Vérifier le workspace](command:42AIO.c.checkWorkspace)"
+				"contents": "Aucune erreur de norme 🥳🎉"
 			}
 		],
 		"menus": {
@@ -245,11 +243,6 @@
 					"command": "42AIO.c.checkWorkspace",
 					"when": "view == 42AIO.c.errors",
 					"group": "navigation@1"
-				},
-				{
-					"command": "42AIO.c.clear",
-					"when": "view == 42AIO.c.errors",
-					"group": "navigation@2"
 				}
 			],
 			"editor/title": [

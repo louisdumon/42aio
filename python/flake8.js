@@ -1,7 +1,7 @@
 const vscode = require('vscode');
 const cp = require('child_process');
 const path = require('path');
-const { errorLensInstalled, showTypeCheckingErrors } = require('../shared');
+const { showTypeCheckingErrors } = require('../shared');
 
 const SECTION = '42AIO.python';
 const TIMEOUT_MS = 30000;
@@ -106,7 +106,7 @@ async function lintDocument(doc) {
 
 function updateInline(editor) {
 	const doc = editor.document;
-	if (!isPython(doc) || !config(doc.uri).get('inlineErrors') || errorLensInstalled()) {
+	if (!isPython(doc) || !config(doc.uri).get('inlineErrors')) {
 		editor.setDecorations(inlineDecoration, []);
 		return;
 	}
