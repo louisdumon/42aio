@@ -41,8 +41,9 @@ Accessible depuis l'icône 42 dans la barre latérale gauche.
 - **Réglages**
   - Afficher les erreurs de norme : active/désactive norminette et flake8
   - Formatage automatique à la sauvegarde : active/désactive c_formatter_42 et Black
+  - Vérifier le workspace : analyse tous les .c/.h du projet (respecte `.gitignore` dans un dépôt Git)
+  - Corriger le workspace : passe c_formatter_42 sur tous les .c/.h du projet (après confirmation), puis revérifie
 - **Erreurs de norme (C)**
   - Liste des erreurs par fichier, clic pour aller à la ligne
-  - Bouton « Vérifier le workspace » : analyse tous les .c/.h du projet (respecte `.gitignore` dans un dépôt Git)
 
 

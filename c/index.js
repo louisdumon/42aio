@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const cp = require('child_process');
 const path = require('path');
+const fs = require('fs');
 const { hasHeader, updateHeader, insertHeader } = require('./header');
 const { reflow } = require('./reflow');
 const { minimalEdits, showTypeCheckingErrors } = require('../shared');
@@ -321,6 +322,87 @@ async function fixDocument(doc) {
 	await vscode.workspace.applyEdit(we);
 }
 
+/** .c/.h files of a workspace folder (Git-tracked and untracked-but-not-ignored when useGitignore applies). */
+async function normFiles(folder) {
+	const dir = folder.uri.fsPath;
+	if (config(folder.uri).get('useGitignore') && (await isGitRepo(dir))) {
+		const listed = await new Promise((resolve) => {
+			cp.execFile(
+				'git',
+				['-C', dir, 'ls-files', '-co', '--exclude-standard', '-z', '--', '*.c', '*.h'],
+				{ maxBuffer: 64 * 1024 * 1024 },
+				(err, stdout) => resolve(err ? null : stdout.split('\0').filter(Boolean))
+			);
+		});
+		if (listed) return listed.map((f) => vscode.Uri.file(path.join(dir, f))).filter((u) => fs.existsSync(u.fsPath));
+	}
+	return vscode.workspace.findFiles(new vscode.RelativePattern(folder, '**/*.{c,h}'), '**/{node_modules,.git}/**');
+}
+
+/** Runs c_formatter_42 on every .c/.h of the workspace, then re-checks it. */
+async function fixWorkspace() {
+	const folders = vscode.workspace.workspaceFolders;
+	if (!folders || !folders.length) {
+		vscode.window.showWarningMessage('Norminette : aucun dossier ouvert.');
+		return;
+	}
+	const files = [];
+	for (const folder of folders) files.push(...(await normFiles(folder)));
+	if (!files.length) {
+		vscode.window.showInformationMessage('42 All In One (C) : aucun fichier .c ou .h dans le workspace.');
+		return;
+	}
+	const ok = await vscode.window.showWarningMessage(
+		`Corriger la norme de ${files.length} fichier${files.length > 1 ? 's' : ''} .c/.h du workspace avec c_formatter_42 ?`,
+		{ modal: true, detail: 'Les fichiers sont réécrits et sauvegardés (y compris ceux ouverts dans l\'éditeur).' },
+		'Corriger'
+	);
+	if (ok !== 'Corriger') return;
+
+	let changed = 0;
+	const failed = [];
+	await vscode.window.withProgress(
+		{ location: vscode.ProgressLocation.Notification, title: 'Norminette : correction du workspace', cancellable: true },
+		async (progress, cancel) => {
+			for (const [i, uri] of files.entries()) {
+				if (cancel.isCancellationRequested) break;
+				progress.report({ message: `${i + 1}/${files.length} · ${path.basename(uri.fsPath)}`, increment: 100 / files.length });
+				const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
+				try {
+					const text = open ? open.getText() : fs.readFileSync(uri.fsPath, 'utf8');
+					const formatted = await formatText(uri, text);
+					if (!formatted.trim() || formatted === text) continue;
+					if (open) {
+						const we = new vscode.WorkspaceEdit();
+						we.set(uri, minimalEdits(open, formatted));
+						await vscode.workspace.applyEdit(we);
+						await open.save();
+					} else {
+						fs.writeFileSync(uri.fsPath, formatted);
+					}
+					changed++;
+				} catch (err) {
+					output.appendLine(`[fixWorkspace ${uri.fsPath}] ${err.message}`);
+					if (err.code === 'ENOENT') {
+						vscode.window.showErrorMessage(
+							'42 All In One (C) : c_formatter_42 introuvable (pip install c_formatter_42) ou règle « 42AIO.c.formatter.command ».'
+						);
+						return;
+					}
+					failed.push(path.basename(uri.fsPath));
+				}
+			}
+		}
+	);
+	const msg = `42 All In One (C) : ${changed} fichier${changed > 1 ? 's' : ''} corrigé${changed > 1 ? 's' : ''}.`;
+	if (failed.length) {
+		vscode.window.showWarningMessage(`${msg} Échec sur ${failed.length} (${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}) — voir la sortie « 42 All In One (C) ».`);
+	} else {
+		vscode.window.showInformationMessage(msg);
+	}
+	await checkWorkspace();
+}
+
 const fixActionProvider = {
 	provideCodeActions(doc, _range, ctx) {
 		if (!isNormFile(doc) || !ctx.diagnostics.some((d) => d.source === 'norminette')) return [];
@@ -538,6 +620,7 @@ function activate(context) {
 		}),
 		vscode.commands.registerCommand('42AIO.c.insertHeader', headerCommand),
 		vscode.commands.registerCommand('42AIO.c.checkWorkspace', checkWorkspace),
+		vscode.commands.registerCommand('42AIO.c.fixWorkspace', fixWorkspace),
 
 		vscode.workspace.onDidOpenTextDocument(onOpen),
 		// norminette runs on open and on save

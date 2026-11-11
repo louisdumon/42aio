@@ -196,7 +196,13 @@
 				"command": "42AIO.c.checkWorkspace",
 				"title": "Vérifier le workspace",
 				"category": "42 All In One (C)",
-				"icon": "$(run-all)"
+				"icon": "$(search)"
+			},
+			{
+				"command": "42AIO.c.fixWorkspace",
+				"title": "Corriger le workspace",
+				"category": "42 All In One (C)",
+				"icon": "$(wand)"
 			},
 			{
 				"command": "42AIO.python.format",
@@ -239,13 +245,6 @@
 			}
 		],
 		"menus": {
-			"view/title": [
-				{
-					"command": "42AIO.c.checkWorkspace",
-					"when": "view == 42AIO.c.errors",
-					"group": "navigation@1"
-				}
-			],
 			"editor/title": [
 				{
 					"command": "42AIO.c.fix",

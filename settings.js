@@ -16,6 +16,12 @@ const TOGGLES = [
 	},
 ];
 
+/** Plain clickable rows shown under the toggles. */
+const ACTIONS = [
+	{ id: 'checkWorkspace', label: 'Vérifier le workspace', tooltip: 'Lancer la norminette sur tout le workspace', icon: 'search', command: '42AIO.c.checkWorkspace' },
+	{ id: 'fixWorkspace', label: 'Corriger le workspace', tooltip: 'Corriger la norme de tous les .c/.h avec c_formatter_42', icon: 'wand', command: '42AIO.c.fixWorkspace' },
+];
+
 function split(key) {
 	const i = key.lastIndexOf('.');
 	return [key.slice(0, i), key.slice(i + 1)];
@@ -53,7 +59,7 @@ class SettingsProvider {
 
 	getChildren(element) {
 		if (element) return [];
-		return TOGGLES.map((t) => {
+		const toggles = TOGGLES.map((t) => {
 			const item = new vscode.TreeItem(t.label);
 			item.id = t.id;
 			item.tooltip = t.tooltip;
@@ -62,6 +68,15 @@ class SettingsProvider {
 				: vscode.TreeItemCheckboxState.Unchecked;
 			return item;
 		});
+		const actions = ACTIONS.map((a) => {
+			const item = new vscode.TreeItem(a.label);
+			item.id = a.id;
+			item.tooltip = a.tooltip;
+			item.iconPath = new vscode.ThemeIcon(a.icon);
+			item.command = { command: a.command, title: a.label };
+			return item;
+		});
+		return [...toggles, ...actions];
 	}
 }
 
