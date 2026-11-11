@@ -3,6 +3,7 @@
 	"displayName": "42 All In One",
 	"description": "Extension tout-en-un pour faciliter la structuration de vos projets 42: header automatique, norminette intégrée, correction automatique de la norme et formatage en C et Python.",
 	"version": "0.1.0",
+	"repository": "https://github.com/louisdumon/42aio",
 	"publisher": "louisdumon",
 	"license": "MIT",
 	"engines": {
